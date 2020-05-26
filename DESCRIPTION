@@ -1,0 +1,12 @@
+Package: RTutorSomethingToTalkAbout
+Type: Package
+Title: RTutor problem set SomethingToTalkAbout
+Version: 0.1
+Date: 2020-26-05
+Author: Lara Santak
+Maintainer: Lara Santak <author@email.net>
+Description: RTutor problem set SomethingToTalkAbout
+License: Not yet licensed by the author. The default suggestion for licensing is
+	Problem set content: Creative Commons (CC BY-SA)
+	Package code: GPL >= 2.0
+Depends: RTutor, tidyverse, haven, lubridate, dotwhisker, stargazer, glmnet, lfe, skimr, ggplot2, dplyr
