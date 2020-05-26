@@ -1,0 +1,2367 @@
+# Something To Talk About:
+# Social Spillovers in Movie Consumption
+
+Author: Lara Santak
+
+#< ignore
+
+```{r ""}
+# library(RTutor)
+# # Adapt the working directory below and then run setup chunk in RStudio.
+# setwd("C:/Users/laras/OneDrive/Dokumente/Uni/BA/BA")
+# ps.name = "SomethingToTalkAbout"
+# sol.file = paste0(ps.name, "_sol.Rmd")
+# libs = c("tidyverse", "haven", "lubridate",
+#          "dotwhisker" , "stargazer",
+#          "glmnet", "lfe", "skimr") # character vector of all packages you load in the problem set
+# name.rmd.chunks(sol.file)
+# create.ps(
+#   sol.file = sol.file,
+#   ps.name = ps.name,
+#   user.name = NULL,
+#   libs = libs,
+#   stop.when.finished = FALSE,
+#   addons = "quiz"
+# )
+# 
+# # The following line directly shows the problem set
+# # in the browser
+# show.ps(
+#   ps.name,
+#   launch.browser = TRUE,
+#   auto.save.code = FALSE,
+#   sample.solution = FALSE
+# )
+
+
+# 
+# # The following line directly shows the problem set
+# # in the browser
+# show.ps(
+#   ps.name,
+#   launch.browser = TRUE,
+#   auto.save.code = FALSE,
+#   sample.solution = FALSE
+# )
+# 
+# ##### Github #####
+# 
+# 
+# # This function creates a skeleton for your problem set package
+# rtutor.package.skel(sol.file=sol.file, ps.name=ps.name,libs=libs,
+#                     pkg.name="testversion_01",   # Name of the problem set package
+#                     pkg.parent.dir = "C:/Users/laras/OneDrive/Dokumente/Uni/BA/publish/testversion_01", # Parent directory 
+#                     author="Lara Santak", # Your name
+#                     github.user="larasantak",     # Your github user name
+#                     extra.code.file=NULL, # name of extra.code.file
+#                     var.txt.file=NULL,    # name of var.txt.file
+#                     overwrite=FALSE  # Do you want to override if package directory exists?
+# )
+# 
+# 
+# ##### shiny ######
+# 
+# # Folder that contains your .rps file
+# rps.dir = "C:/Users/laras/OneDrive/Dokumente/Uni/BA/KW19"
+# # Folder in which app shall be created
+# app.dir = "C:/Users/laras/OneDrive/Dokumente/Uni/BA/App/v01"
+# rtutor.app.skel(ps.name=ps.name, app.name="v01",
+#                 app.dir=app.dir, rps.dir = rps.dir,
+#                 rps.app = TRUE, libs=libs,overwrite=TRUE)
+```
+#>
+
+
+Hey there! Welcome to this interactive problem set. 
+If you are interested in improving your R coding skills, getting an introduction to a basic machine learning algorithm (LASSO), and learn something about the relationship between moviegoing and weather, keep ongoing. You should have some basic knowledge of linear regression. As well be familiar with the package `dplyr`.
+
+This problem set is part of my bachelor’s thesis at Ulm University. It is based on the paper **Something to Talk About: Social Spillovers in Movie Consumption**, which was published in the *Journal of Political Economy* in 2016.
+
+The paper, data, and some more information can be found [here](https://www.journals.uchicago.edu/doi/abs/10.1086/688177). Further, in the problem set, we will refer to it as paper.
+
+
+## Exercise Content 
+
+0 - How to solve the problem set
+
+1 - Motivation
+
+2 - Data
+
+3 - Recap Linear Regression
+
+4 - Empirical Model
+
+5 - Moviegoing Summer
+
+6 - LASSO
+
+7 - First Stage Results
+
+7 - Second Stage Results
+
+9 - Conclusion
+
+
+
+
+
+## Exercise 0 -- How to solve the problem set
+
+If this is your first RTutor Problem Set, you can find some instructions in exercise 0. If you have already solved a problem set, you can start with exercise no. 1. 
+
+In this problem set, you will find from time to time some code chunks. The first chunk is usually already active. On the top you find five buttons:
+
+- `check`: Runs your chunk and checks if everything is correct.
+
+- `hint`: If you have trouble solving the chunk, press check to get a hint.
+
+- `run chunk`: This runs your chunk but is not checking it, whether it is correct. If you first want to try something out, use run chunk.
+
+- `data`: This opens up a Data Explorer, where you can look at the data.
+
+- `solution`: This one gives you the solution of the chunk.
+
+
+
+If you start a new exercise, your code chunk might not already be active. Then you can press the button `edit`. 
+
+You have to solve previous code blocks to run the current chunk. Nevertheless, you can always start chunks in a new exercise. Previous exercises do not have to be addressed. But they are recommended to do.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Exercise 1 -- Motivation
+
+Have you ever wondered why you watch a particular movie? Sometimes you might have been anticipating a certain one like one of the Harry Potter movies or a newly filmed favorite book of yours. Other times you might have just gone to a movie theater and decided on the film there, or a friend told you about a specific one. As you can already see, there might be several factors that contribute to moviegoing behavior. The economic term that drives consumers to consume something is called demand. First, let us define the term demand:
+
+> "In economics, demand is the quantity of a good that consumers are willing and able to purchase at various prices during a given period of time." 
+
+(O’Sullivan and Sheffrin, 2003, p. 79)
+
+Usually, we have fixed prices in theaters for all movies. The price cannot be a driver for demand. The economic definition of demand might not describe it for moviegoing very well. Therefore we are interested in other effects on demand. 
+
+One of the effects might be the weather. If the weather is harsh, for example, it is rainy. Viewership might increase due to the nature of the moviegoing inside. The weather has several attributes like temperature, precipitation, and a combination of both, like snow or hail. Adding the weather into account results in having a broad set of instruments for different weather occurrences. Some variables might explain each other so that we might have redundant variables. In total, our model with all-weather variables might be overfitted and too complicated. That means it would work well with the given data since it is perfectly molded to the data at hand. But the model might not work as good with new data. Hand-picking variables might be a good idea first, but it is hard to find the crucial variables. Therefore we will introduce a variable selection method called LASSO, which helps us to select the essential variables for our model.
+
+Another aspect of demand might be how and if others consume a particular good. A consumer might have more utility from a specific good if others demand or consume it (Becker 1991). In our case of moviegoing people might be influenced to watch a movie, just because others around them have seen it. In this case, so-called learning effects, where a consumer learns from others’ decisions, drive demand (Young 2009). This research is mainly theoretical, because of the difficulties to divide causal from noncausal effects in a social group setting (Manski 1993). We will discuss this at the end of the problem set.
+
+<!-- This problem set investigates the social spillover effects of in-theaters movies. When all movie characteristics are fixed, is a single consumer more likely to watch the movie if others have already seen it?  -->
+
+
+
+
+
+
+## Exercise 2 -- Data
+
+Let’s start with our analysis by getting to know our data:
+
+Our first data set comes from Box Office Mojo, owned by Internet Movie Database (IMDb). It contains national box office data with total US tickets sales by day from 2002 till 2012. Our data set is called `data_movies.dta`. The ending `.dta` implicates a stata file. This data and all the following data can be downloaded with the paper.
+
+R cannot read stata files by default. Therefore we need our first package, called `haven`. If you haven’t worked with `haven`, you will find additional information in the infobox.
+
+#< info "haven"
+
+`haven` has several functions for reading and writing statistical data formats. It includes the function `read_dta()` which reads `.dta` files up to version 15. Further information can be found [here](https://haven.tidyverse.org/reference/read_dta.html).
+
+In order to read in data you first need to load the package `haven` with the command `library()` and use `read_dta()` accordingly:
+
+
+```{r "2"}
+# Example on how to use haven and read_dta():
+
+# Load the package haven:
+#library(haven)
+
+# Read in some data "data.dta" and save it as data:
+#data <- read_dta("data.dta")
+
+```
+
+
+#>
+
+Load the package `haven` with the command `library()`. Then use the function `read_dta()` to read our data set `data_movies.dta` and store it in the variable `data`. If you need some help, take a look at the info box above or press hint.
+
+```{r "2__2"}
+#< task
+# Load the package haven
+#>
+library(haven)
+
+#< hint
+cat("Load the package haven with library().")
+#>
+
+#< task
+# Read in our data "data_movies.dta" and save it as data
+#>
+data <- read_dta("data_movies.dta")
+
+#< hint
+cat("Type data <- read_dta() and insert in the brackets data_movies.dta")
+#>
+
+```
+
+
+### Overview of our data
+
+When reading in new data, it is always useful to first take a look at the data before doing any analyses. 
+
+
+Display the first ten rows of the data set `data`. The function `head()` displays the head of an object like a vector, table, data frame, etc. The first argument should be our data set. To display ten rows, insert the number of rows as the second argument. For the function to run successfully, remove the underscores. 
+
+
+```{r "2__3"}
+#< hint
+cat("Just fill in 'data' and '10'. ")
+#>
+#< fill_in
+# Fill in the arguments to see the first 10 rows of our data.
+head(___, ___)
+#>
+# Below the fill_in block put the sample solution
+head(data, 10)
+
+
+```
+As you can see, we have two variables with date in the name and not readable date format. We can fix this by using the package `lubridate` and the function `as_date()`. Since our data is stata format and has a different origin date than R, we need to set ‘origin = "1960-01-01"  ‘. Uncomment the first three rows and display the first ten rows as above.
+
+
+```{r "2__4"}
+
+
+#< task
+
+#library(lubridate)
+#data$date <- as_date(data$date, origin = "1960-01-01")
+#data$sat_date <- as_date(data$sat_date, origin = "1960-01-01")
+
+# display again the first ten rows of our data
+
+#>
+library(lubridate)
+data$date <- as_date(data$date, origin = "1960-01-01")
+data$sat_date <- as_date(data$sat_date, origin = "1960-01-01")
+
+head(data, 10)
+
+
+
+```
+
+
+Now you can see the first ten rows of our data with readable dates. If you cannot see all columns use the scrollbar at the bottom of the table. Some variables which are irrelevant for this exercise have already been dropped. In the first column `title`, you find the title for each movie. Next, you see in the column `production_budget` the production budget for each film. The next three columns are date variables. `opening_sat_date` contains the opening date of movies, later we will find out more about all three date variables. `dow` stands for "day of week" with each weekday being an integer. `wkintheaters` gives us the week after release for each observation, so in the week of release it equals $1$ and in the last week in movies $6$. Each `movie_id` is just an indicator number for each movie title. `tickets` contains the viewership (sold tickets) for each date and movie in millions.
+
+This data set includes movies released in the US that have not been terminated in the first six weeks. First, we want to find out more about our variable, `production_budget`.
+
+An easy way to find out more is to get some summary statistics of a variable. This can be done with the library `skimr` and the function `skim_without_charts()`. To only look at the variable `production_budget`, we can use the `$`-command (`data$production_budget`). To get better readable results use the function `print()` around the function `skim_without_charts()`. 
+
+
+```{r "2__5"}
+
+#< task
+# Load the package skimr
+
+#>
+library(skimr)
+
+#< hint
+cat("Load the package skimr with library()")
+#>
+
+#< task
+# use the function skim_without_charts() to get summary statistics of the variable production budget
+#>
+print(skim_without_charts(data$production_budget))
+
+#< hint
+cat("use the function skim_without_charts() to get summary statistics of the variable production budget, which can be accessed with data$production_budget. To get better readable results, use print() around skim_without_charts().")
+#>
+
+```
+
+In the first section **Data Summary**, we find the name, number of rows, and number of columns of our variable. As we can see, we have 24855 rows and one column, because we only looked at one variable. Also, the frequency of different column types is listed. Since we have one column overall, we see that our production budget has the type numeric. In the section **Variable type: numeric** we find for our (single) numeric variable summary statistics. `n_missing` stands for the number of missing values and `complete_rate` for the relation of missing and not-missing values (with `n_missing == 0` implicates `complete_rate == 1`). Next, we find the mean, standard error, quantiles, and histograms with the distribution.
+
+
+Now we take a look at the allocation of production budgets over time in our data. Therefore we need the package `ggplot2`. We want to create a plot with the production budget over time. On our x-axis, we use the variable `opening_sat_date` and on our y-axis `production_budget`. It contains for each movie the date of the Saturday, where it has been released. First, we load the package `ggplot2`, then insert the correct variables for the x- and y-axis, save it under the name `plot_pb` and print out the plot (this may take a while): 
+
+ToDo: task -> error?!
+
+```{r "2__6"}
+
+
+#< hint
+cat("First load the package ggplot2 and the fill in the correct variables for each axis")
+#>
+#< fill_in
+# Load the package ggplot2:
+library(ggplot2)
+
+# Fill in the arguments to plot our data
+plot_pb <- ggplot(data = data) +
+  geom_point( aes(x = ___, y = ___), na.rm = TRUE, size = 0.5 ) +
+    labs(x= "date of opening Saturday", y = "production budget in dollar" )
+
+# Print out the plot (nothing to do here)
+plot_pb
+#>
+
+# Load the package ggplot2:
+library(ggplot2)
+
+# Fill in the arguments to plot our data
+plot_pb <- ggplot(data = data) +
+  geom_point( aes(x = opening_sat_date, y = production_budget), na.rm = TRUE, size = 0.5 ) +
+    labs(x= "date of opening Saturday", y = "production budget in dollar" )
+
+# Print out the plot (nothing to do here)
+plot_pb
+
+```
+
+Most movies have a production budget below 100 million dollars. Since 2006 we have some films which largely exceed 200 million dollars as a production budget. At the end of 2009, we have an enormous outlier with a production budget of over 400 million. Later in this exercise, we will find out the title of the outlier. Maybe you already can guess the movie! 
+Especially movies with higher production budgets seem to be around imaginary horizontal lines, once in the middle of the year and once at the end of the year. 
+
+Let’s check if this is true and draw some vertical lines in our graph. We draw for each year one line at the first of June in red and at the first of December in yellow. `ggplot2` allows us to draw vertical lines with `geom_vline()`, this just can be added to the plot `plot_pb` with a `+`. We also need the package `lubridate` in order to transform our dates from strings to readable dates. This can be done with the function `as_date()`. Just press check in order to see the new plot: 
+
+
+```{r "2__7"}
+#< task_notest
+library(lubridate)
+plot_pb +
+  geom_vline(
+    xintercept = c(
+      as_date("2002-06-01"),
+      as_date("2003-06-01"),
+      as_date("2004-06-01"),
+      as_date("2005-06-01"),
+      as_date("2006-06-01"),
+      as_date("2007-06-01"),
+      as_date("2008-06-01"),
+      as_date("2009-06-01"),
+      as_date("2010-06-01"),
+      as_date("2011-06-01"),
+      as_date("2012-06-01")
+    ),
+    colour = "red"
+  )+
+  geom_vline(
+    xintercept = c(
+      as_date("2002-12-01"),
+      as_date("2003-12-01"),
+      as_date("2004-12-01"),
+      as_date("2005-12-01"),
+      as_date("2006-12-01"),
+      as_date("2007-12-01"),
+      as_date("2008-12-01"),
+      as_date("2009-12-01"),
+      as_date("2010-12-01"),
+      as_date("2011-12-01"),
+      as_date("2012-12-01")
+    ),
+    colour = "yellow"
+  )
+#>
+```
+
+As we can see, a lot of movies with higher production budgets are lingering around the horizontal lines we just have drawn. Einav (2012) explains this pattern because bigger movies are released when seasonal demand is the highest. <br>
+Therefore demand increases even more in those seasons. There are two seasons for high-budget movies. One at the beginning of summer with the 4th of July as one of the key holidays. The other one in the winter holiday season with holidays like Thanksgiving and Christmas. 
+
+As mentioned earlier, at the end of 2009, we have one enormous outlier. Maybe you already have an idea which movie this could be. So let us figure out which movie has the highest and which movie has the lowest production budget. 
+
+For the next task, we need from the package `dplyr` the pipe `%>%` and the function `slice()`. Further, we also need the functions `which.max()` and `which.min()` from base R. If you need further information, check the following infoboxes. 
+
+#< info "dplyr: Piping (%>%), slice()"
+
+From now on, we will use the package `dplyr`, which simplifies data manipulation. An Overview of the package can be found [here](https://dplyr.tidyverse.org). In the [Introduction](https://dplyr.tidyverse.org/articles/dplyr.html), you can find additional information about piping and functions in the package. 
+
+Piping allows you to write a function of the form $f(x,y)$ as $x$ `%>%` $f(y)$. Whereas $x$ is the first argument entered into a function and $y$ the second argument. $x$ is often the data set or a variable. This simplifies code, especially when there are several operations applied to the same data.
+
+
+```{r "2__8"}
+
+#without pipe:
+#head(data$production_budget,10)
+
+#with pipe:
+#data %>% select(production_budget) %>%
+  #head(10)
+
+```
+
+<br>
+<br>
+
+`slice()` "slices" rows in the data by position. For further information look [here](https://dplyr.tidyverse.org/reference/slice.html).
+
+#>
+
+#< info "which.max(), which.min()"
+The functions return the position of the maximum or minimum value. 
+#>
+
+Load the package `dplyr` and use the pipe `%>%` and `slice()` to get the minimum and maximum rows of production budget. Because this is the first task with `dplyr` just press check: 
+
+
+
+```{r "2__9"}
+#< task_notest
+library(dplyr)
+data %>%
+  slice(which.max(production_budget), which.min(production_budget))
+#>
+
+```
+You can now see each movie with the highest and lowest production budget in our data one observation. Let us have our first quiz! (Just type in the answer below. The answer is case sensitive.)
+
+#< quiz "Ex2-1"
+question:  Which movie has the highest production budget?
+answer: Avatar
+
+#>
+
+We found out a few things about the variable `production budget`. Let us get back to analyzing our entire data set. One important thing to know is how many observation does our data set contain.
+This can easily be done by just counting the number of rows in our data set with `nrow()`, just give it a try and use the pipe `%>%`: 
+
+```{r "2__10"}
+#< hint
+cat("Use nrow() on data")
+#>
+
+#< task
+
+#>
+
+data %>% nrow()
+```
+
+#< quiz "Ex2-2"
+question: How many different observations are in our data set?
+answer: 24855
+#>
+
+Let’s find out if our number of observations match our number of movies. With the command `n_distinct()` you get the number of distinct values of a variable. Just plug in the variable `title` (`data$title`) without the pipe: 
+
+
+```{r "2__11"}
+
+#< hint
+cat("Use n_distinct() on data$title")
+#>
+
+#< task
+
+#>
+
+n_distinct(data$title)
+
+```
+#< quiz "Ex2-3"
+question: How many different movies does our data set contain?
+answer: 1381
+#>
+
+Now, look at the two numbers. What does this implicate for our data? Try to figure out the quiz below. In case you need to do some calculations here is a code chunk:
+
+
+
+```{r "2__12"}
+#< hint
+cat("Delete all arguments and press check to continue.")
+#>
+
+#< task_notest
+# Delete all arguments and press check to continue.
+#>
+
+```
+
+
+#< quiz "Ex2-4"
+question: Which statement of the following is correct?
+choices:
+       - For each observation, we have several corresponding movies.
+       - For each movie, we have one corresponding observation.
+       - For each movie we have several corresponding observations.*
+       - For each observation, we only have one corresponding movie.
+success: Great, your answer is correct! 
+failure: Are there more observations or distinct movies?
+#>
+
+
+#< award "Data Novice"
+ Well done!
+#>
+
+#### Data for one movie
+
+The number of observations is a lot higher than the number of movies. This is because of the way the data is structured. Let us take a look at the data of the movie "Avatar". We need to filter our data set for the movie title "Avatar". This can be done by using the function `filter()` and the condition `title == "Avatar"`. Uncomment the given line and add the missing function and argument: 
+
+```{r "2__13"}
+#< hint
+cat("Uncomment and use the function filter() with the condition from the task.")
+#>
+
+#< task
+# avatar <- data %>% 
+  
+#>
+
+avatar <- data %>% 
+  filter(title == "Avatar")
+
+
+```
+
+How many observations does our new data set `Avatar` contain? (The needed function has already been used, also use the pipe `%>%`.) 
+
+```{r "2__14"}
+#< hint
+cat("you already solved the same task for a different data set. Just copy the command")
+#>
+
+#< task
+
+#>
+
+avatar %>% nrow()
+```
+
+
+#< quiz "Ex2-5"
+question: How many different observations are in our data set "avatar"?
+answer: 18
+#>
+
+Let’s take a deeper look at our data set *avatar*. We only keep the columns `date`, `sat_date`, `opening_sat_date`, `gross`, `dow`, `wkintheaters` and `tickets`. This can be done with the `dplyr` function `select()`. The code is already entered, just press check:
+
+
+```{r "2__15"}
+#< task_notest
+avatar <- avatar %>%
+  arrange(date) %>%
+  select( opening_sat_date, date, wkintheaters, dow, sat_date, tickets, gross)
+
+#>
+
+```
+
+Now we want to display the entire data set. Since we now have 18 observations in our data set, just use `head()` and specify the number of output rows. Just try it:
+
+```{r "2__16"}
+#< task
+# Use head() to look at the 18 observations. 
+#>
+
+head(avatar)
+
+```
+
+As in Dahl and Della-Vigna (2009), we only look at viewership on weekends, since weekend sales contain the majority of ticket sales.
+
+`opening_sat_date` is for all observations the same. This contains the Saturday when the movie is first in theaters.<br>
+`date` includes the date of each observation. The next variable is `wkintheaters` (weeks in theaters), which indicates how long the movie has already been in theaters for each observation. As you can see we have for each week three observations, since we only look at weekends. `dow` stands for "day of week". `5` stands for Fridays `6` for Saturdays and `0` for Sundays. `sat_date` is the Saturday of each week.
+`tickets` are the sold tickets in a million for each day, and `gross` is the gross for each day.
+
+
+
+#### Gross
+
+As explained above, the gross for each movie is not available in our data.  The gross is given for each day. So if we want to find out which movie had the biggest gross, we have to start with some calculations. Therefore, we have to sum up the gross for each day and by each movie: We use our original data `data` again. We need to group our data with `group_by()` for each movie and sum the gross across those groups. We save our data in the variable `gross`. Just press check to get the results:
+
+
+```{r "2__17"}
+#< task_notest
+gross <- data %>%
+  group_by(title) %>%
+  summarise( gross = sum(gross), opening_sat_date = mean(opening_sat_date))
+#>
+```
+
+Take a look at the first 15 rows of our new calculated data, use head() and $15$ as second argument:
+
+```{r "2__18"}
+#< task
+# Look at the first 15 rows of gross
+#>
+
+head(gross, 15)
+```
+
+We have for each movie the first date in theaters and the accumulated gross overall weekends.
+
+#< quiz "Ex2-6"
+question: The gross has been calculated by...
+choices:
+       - summing the gross for each day in the first six weeks.
+       - summing the gross for the first week.
+       - summing the gross for the weekend (excluding Fridays) in the first six weeks.
+       - summing the gross for the weekend (including Fridays) in the first six weeks. *
+success: Great, your answer is correct! 
+#>
+
+Now we want to take a look at the top 10 movies with the biggest gross. We can just arrange our data from above with `arrange()`. Since we want a decreasing order, we have to write a `-` in front of our variable. Afterward, we want to display the top 10 movies. 
+
+
+```{r "2__19"}
+#< task
+# Rearrange the data gross by rearranging the variable gross in descending order
+
+# take a look at the first ten rows
+
+#>
+
+gross <- gross %>% arrange(-gross)
+
+head(gross, 10)
+```
+#< quiz "Ex2-7"
+question: What place did Avatar score? (single digit)
+answer: 2
+
+#>
+
+
+Let us take a look at the gross overtime of our entire data set by making a new plot. For each movie, we want to have one data point. Unfortunately, we have three date variables. 
+
+#< quiz "Ex2-8"
+question: Which variable do you have to select for your x-axis?
+choices:
+  - opening_sat_date*
+  - date
+  - sat_date
+  
+#>
+
+Fill in the correct variables for the x- and y-axis:
+```{r "2__20"}
+#< fill_in
+plot_gross <- ggplot(data = gross) +
+  geom_point( aes(x = ___, y = ___), na.rm = TRUE, size = 0.5)
+
+plot_gross
+#>
+
+plot_gross <- ggplot(data = gross) +
+  geom_point( aes(x = opening_sat_date, y = gross), na.rm = TRUE, size = 0.5)
+
+plot_gross
+```
+
+As done above, lets add some lines for seasonality. Just press check:
+
+```{r "2__21"}
+#< task_notest
+plot_gross +
+  geom_vline(
+    xintercept = c(
+      as_date("2002-06-01"),
+      as_date("2003-06-01"),
+      as_date("2004-06-01"),
+      as_date("2005-06-01"),
+      as_date("2006-06-01"),
+      as_date("2007-06-01"),
+      as_date("2008-06-01"),
+      as_date("2009-06-01"),
+      as_date("2010-06-01"),
+      as_date("2011-06-01"),
+      as_date("2012-06-01")
+    ),
+    colour = "red"
+  )+
+  geom_vline(
+    xintercept = c(
+      as_date("2002-12-01"),
+      as_date("2003-12-01"),
+      as_date("2004-12-01"),
+      as_date("2005-12-01"),
+      as_date("2006-12-01"),
+      as_date("2007-12-01"),
+      as_date("2008-12-01"),
+      as_date("2009-12-01"),
+      as_date("2010-12-01"),
+      as_date("2011-12-01"),
+      as_date("2012-12-01")
+    ),
+    colour = "yellow"
+  )
+
+#>
+```
+As we can see again, a lot of movies with a high gross are lingering around those vertical lines. As previously explained, due to seasonal effects. 
+
+
+#### Average Daily Weekend Audiences
+
+
+Let us visualize our data in some more figures. We want to plot the average daily audience against weeks in theaters, first by movie, then by weekend release.
+On our x-axis, we want weeks in theaters, and overall, on our y-axis, we want average daily audiences by each movie. We need to calculate the averages for `tickets` by movie and week in theaters. Therefore we need to group the data by the latter two. After that, we want average values for each week. Thus we repeat the step, but only for the group `wkintheaters`.
+
+To get average audiences by movies, we first need to calculate the means over tickets per movie_id and week in theaters. To understand what is happening, we select the movie with `movie_id == 1`. We only select variables, which are important in this task. Just press check:
+
+
+```{r "2__22"}
+#< task
+movie_1 <- data %>%
+  filter(movie_id ==1) %>%
+  select(date, wkintheaters, tickets)
+
+head(movie_1,18)
+#>
+
+```
+
+For the movie with the `movie_id == 1`, we see all observations. As we can see again, we have three observations per week. `wkintheaters` tells us in which week after release we are. In the next step, we want to calculate the average tickets for each different week. Therefore we need to group the data by each value of `wkintheaters` and calculate the mean of the belonging tickets measures and save it in a new variable called `avg_tickets_week`. Just press check:
+```{r "2__23"}
+#< task
+movie_1 <- movie_1 %>%
+  group_by(wkintheaters) %>%
+  mutate(avg_ticktes_week = mean(tickets)) 
+
+head(movie_1,18)
+#>
+
+```
+
+As you can see, we calculated the average ticket sales per week for the movie with the `movie_id == 1` and saved it in the variable the `avg_tickets_week`. Now we want to calculate the means for all the movies in our data. Therefore, we are doing the same with the entire data set. Just press check:
+
+```{r "2__24"}
+#< task
+avg_audiences <- data %>%
+  group_by(wkintheaters) %>% 
+  summarise( avg_tickets_week = mean(tickets))
+
+head(avg_audiences)
+#>
+```
+
+The table shows the average audiences for each week. Let us visualize this in a plot. Just press check:
+
+ 
+```{r "2__25"}
+#< task
+ ggplot( data = avg_audiences) +
+    geom_line( aes(x = wkintheaters, y = avg_tickets_week), linetype = "dashed") +
+    geom_point( aes(x = wkintheaters, y = avg_tickets_week)) +
+    labs(title = "A. by Movie", x= "Week in Theaters", y = "Average Daily Audience (1,000,000s)" )
+#>
+
+```
+
+The plot shows the average daily ticket sales for each of the six weekends in theaters across 1381 movies in our sample. During opening weekend, regular average ticket sales are exceeding 1 Million. In the following weeks, it drops approximately exponentially. We will further investigate this drop in later exercises.
+
+<!-- ##### by release weekend -->
+
+<!-- Now we sum average ticket sales for movies by release weekend. Therefore, we have to first group by our date variables `opening_sat_date` and `date`. We then sum the tickets per day. After that, we calculate averages for each week in theaters. -->
+
+<!-- ```{r "2__26"} -->
+
+<!-- #< task -->
+
+<!-- avg_audiences_weekend <- data %>% -->
+<!--   group_by(opening_sat_date, date) %>% -->
+<!--   summarise( tickets = sum(tickets), wkintheaters = mean(wkintheaters)) %>% -->
+<!--   ungroup() %>% -->
+<!--   group_by(wkintheaters) %>% -->
+<!--   mutate(wktick = mean(tickets)) %>% -->
+<!--   summarise(wktick= mean(wktick)) -->
+
+<!-- #> -->
+<!-- ``` -->
+
+
+<!-- Let us plot our calculations. Everything has been prepared, just press check: -->
+
+<!-- ```{r "2__27"} -->
+<!-- #< task_notest -->
+
+<!-- ggplot( data = avg_audiences_weekend) + -->
+<!--   geom_line( aes(x = wkintheaters, y = wktick), linetype = "dashed") + -->
+<!--   geom_point( aes(x = wkintheaters, y = wktick)) + -->
+<!--   labs(title = "by Weekend Released", x= "Week in Theaters" , y = "Average Daily Audience (1,000,000s)" ) -->
+
+<!-- #> -->
+<!-- ``` -->
+
+<!-- This plot shows the average daily audiences per week in theaters by release weekend. So the average audience is 2.5 million viewers for releases on opening weekend. It drops to around 1.3 million in week two and 200.000 in week 6. -->
+
+#< award "Data Expert"
+ Very good, you finished the exercise!
+#>
+
+
+## Exercise 3 -- Recap Regression
+
+In this chapter, we take a look at linear regression, ordinary least squares, and the f-statistic.
+This is a small recap to refresh your knowledge. It also discusses briefly ordinary least squares which you will need later. If you need a more detailed introduction or more mathematical details, see Kenndy (2008) or Wooldridge (2016).
+
+
+
+### Linear Regression
+
+When creating a model with linear regression, we have $n$ explanatory variables $x_n$ and one response variable $y$. Response variables usually have some kind of relationship to one or more explanatory variables. This relationship can be examined by using a linear regression model:
+$$ y = \beta_0 + \sum_{i=1}^n x_{i}\beta_{i} + \epsilon.$$
+$\beta = (\beta_1, ..., \beta_n)$ are our regression weights and $\beta_0$ is our y-intercept. $\epsilon$ is independent and normally distributed (cf. Wooldridge (2016), pp. 61-63).
+
+
+Let us look at some data and inspect the case for one explanatory variable. We now take a look at the relationship of sold tickets and gross. 
+
+First load the data `tickets_gross.dta` and display with `head()` part of the data:
+```{r "3"}
+#< task
+library(haven)
+
+# As in Exercise 2 save our data "tickts_gross.dta" in a variable data with read_dta()
+# uncomment the next line and add the needed commands
+#data <- 
+
+# Display the first rows of data 
+head(data)
+#>
+
+
+data <- read_dta("tickets_gross.dta")
+head(data)
+
+```
+For each movie and date, we have an observation with `tickets` and `gross`. Our `date` is in a numeric variable (therefore the dates are not readable). `tickets` are in a million tickets.
+
+In the next step we want to visualize gross by tickets. Therefore we plot a `ggplot` with tickets on the x- axis and gross on the y-axis. We save our plot in the variable `plot_tickets_gross`. Fill in below the variables for x and y:
+
+```{r "3__2"}
+#< fill_in
+library(ggplot2)
+ggplot(data = data) +
+  geom_point( aes( x= ___, y = ___))
+
+#>
+
+library(ggplot2)
+ggplot(data = data) +
+  geom_point( aes( x= tickets, y = gross))
+
+
+```
+
+We already can tell with more sold tickets the gross increases. So let us figure out how much. Therefore we need to run a linear regression on this data. In this case, x is our tickets and y our response variable. 
+
+Use `lm()` to run a linear regression with tickets being our explanatory variable and gross our response variable and save it in the variable my_lm. In the infobox, you find some information on how to use `lm()`.
+
+#< info "Code Example with lm()"
+ 
+```{r "3__3"}
+#lm( "response variable" ~ "explanatory variable", data = "data set")
+```
+ 
+#>
+
+```{r "3__4"}
+#< task
+# uncomment the next line and add the missing parts
+#my_lm <- 
+#>
+
+my_lm <- lm( gross ~ tickets, data = data)
+```
+
+
+Let's get with `summary()` some information about our linear regression, Just press check:
+
+```{r "3__5"}
+#< task
+ summary(my_lm)
+#>
+
+```
+
+First, we see our formula with `gross ~ tickets` and the used data set. Next, we get some statistics about our residuals. We will find out more about the residuals later.
+
+The next part is called `coefficients`. First, we look at the column `Estimate`. The first number in the column is the y-intercept, and the second one is the slope of our linear regression. Our line, therefore, has the form: 
+
+$$y_i = -15309 + 6957491 x_i $$
+
+#< quiz "Ex3-1"
+question: What does our y-intercept mean?
+choices: 
+- If 0 tickets are sold, the predicted gross is 15309.
+- If 0 tickets are sold, the predicted negative gross is 15309.*
+
+#>
+
+<br>
+<br>
+#< quiz "Ex3-2"
+question: With one million more sold tickets, the gross increases by (Remember, tickets are in millions!)
+answer: 6957491
+#>
+<br>
+<br>
+It is a little bit unhandy to calculate in a million tickets. Therefore, we want to know the average increase in the gross by one more sold ticket. Use the chunk below to make some calculations if needed.
+
+```{r "3__6",optional=TRUE}
+
+6957491/1000000
+
+```
+#< quiz "Ex3-3"
+question: How much does the gross increase for a single ticket on average?
+choices: 
+- $5
+- $6
+- $7*
+- $8
+
+#>
+<br>
+<br>
+Lets add this regression line to our plot `plot_tickets_gross`. `ggplot2` has with `geom_smooth()` a function which adds the linear regression line. In `geom_smooth()` we need the `method = lm`. Just press check:
+
+```{r "3__7"}
+#< task_notest
+
+ggplot(data = data, aes( x= tickets, y = gross)) +
+  geom_point()+
+  geom_smooth( method = 'lm') 
+  
+
+#>
+
+```
+
+
+Now you can see our regression line in our plot with $y_i = -15309 + 6957491 x_i$. 
+
+
+Now we want to investigate our regression output from above further. Just press check to get the same output again:
+
+```{r "3__8"}
+#< task
+summary(my_lm)
+#>
+
+```
+
+
+Another important information is in the coefficient part of our regression. Next to the estimate, you find a column called *Std. Error*. It is the average distance between the observed and predicted value. All predicted values are on the regression line. 
+
+#< quiz "Ex3-4"
+question:  What is the standard error in our linear regression? (The average difference between predicted gross and actual gross.)
+
+answer: 5286
+
+#>
+<br>
+<br>
+
+
+#< quiz "Ex3-5"
+question: To have a useful regression, do you think...
+choices: 
+- ... the standard error should be maximized.
+- ... the standard error should be minimized.*
+- ... the standard error is not essential for a regression.
+  
+#>
+<br>
+<br>
+
+### Ordinary Least Squares
+
+
+Now you might wonder how $(\beta, \beta_0)$ has been calculated. There are a lot of ways. The most common approach, which is also used in the function `lm()` from above, is ordinary least squares (OLS).
+
+The idea is to minimize the difference between observed and predicted values. Since this could be positive and negative values, we use squares of the differences. This means we have to minimize the following function (cf. Wooldridge (2016), p. 64-66):
+
+$$\sum_{i=1}^{n}(y_i - \beta_0 - \beta_1x_{i1} - ... - \beta_p x_{ip})^2 \rightarrow min_{\beta_0, \beta_1,...,\beta_p}$$
+
+
+### F-statistic - Overall Significance of the Regression
+
+
+The f-statistic tests the hypothesis if none of the explanatory variables affect the regression. That means all of our coefficients are zero (cf. Wooldridge (2016), p. 135):
+
+$$H_0: \beta_1 = \beta_2 = ... = \beta_n = 0$$ 
+
+Rejecting $H_0$ means that at least one of the coefficients is, **not** zero.
+
+`lm()` also calculates the f-statistic. Retake a look at our regression output: (The f-statistic can be found in the last row)
+
+```{r "3__9"}
+summary(my_lm)
+
+```
+
+
+To find out if our f-statistic is meaningful, we can calculate a critical value. If the f-statistic is more substantial than our critical value, we can dismiss our $H_0$.
+
+To calculate our critical value, we need the function `qf()`.In the first argument, we give the confidence interval for our f-statistic. Next, we specify our degrees of freedom (DF), which you can find in the f-statistic in our regression output. 
+
+What is the critical value for our regression above with a confidence interval of 99%? Just press check.
+
+
+```{r "3__10"}
+#< task
+qf(.99, 1, 28248)
+
+#>
+```
+
+#< quiz "Ex3-6"
+
+question: Can you accept or reject the hypothesis for our regression above and why?
+
+choices: 
+  - accept (f-statistic is larger than critical value)
+  - reject (f-statistic is larger than critical value)*
+  - accept (f-statistic is smaller than critical value)
+  - reject (f-statistic is smaller than critical value)
+
+#>
+<br>
+<br>
+
+
+#< quiz "Ex3-7"
+
+question: What does rejecting the hypothesis implicates (in general)?
+
+choices: 
+  - none of the explanatory variables have an impact
+  - at least one of the explanatory variables has an impact*
+  - all of the explanatory variables have an impact
+  
+#>
+
+<br>
+<br>
+
+The previous theory and more mathematical details can be found in Wooldridge (2006, chapter 4).
+
+#< award "Regression Expert"
+ Well done! You finished the exercise on regression!
+#>
+
+
+## Exercise 4 -- Empirical Model
+
+In Exercise 2, you already saw that movie releases are not constant. According to Einav (2007), this is mainly due to two factors: 
+First, demand depends on seasons. Moviegoing is just more prevalent when the weather is not so ideal. For example, ticket sales tend to be higher during winter due to cold, rainy, or snowy weather. 
+The second factor is the supply of good quality movies. For example, Christmas is the prime time for movie releases. Therefore more high budget movies are released around this time.
+
+We aim to find unexpected higher or lower ticket sales in our data. For example, if ticket sales on a specific day are unusually high, compared to other years, we want the difference between the expected number of ticket sales and real ticket sales on this day. This is called abnormal viewership. Therefore, the seasonal effects have to be factored out. For example, around Christmas, ticket sales are high every year. This is a seasonal effect that we want to factor out to be able to get abnormal viewership.
+
+In our data, we have variables for each year, each week of the year, day of the week, and holidays, which are our indicators for seasons. 
+
+To manipulate our data accordingly, we need to read in a new data set `data_emp.dta`. It has already been transformed. It only contains relevant variables for this exercise. Since we only work with one data set in this exercise, we will call it `data`.
+Just press check:
+```{r "4"}
+#< task
+library(haven)
+data <- read_dta("data_emp.dta")
+#>
+
+```
+
+
+As always, we should first take a look at our data and see what it contains. Let us look at the variable names with `colnames()`. Just press check:
+
+```{r "4__2"}
+#< task
+colnames(data)
+#>
+
+```
+The data set also contains the already known variables `tickets` (in a million), `date`, and `opening_sat_date`. The rest of the variables are indicator variables. For every observation, we have a date variable, which has been split up in indicator variables. The variables starting with "ww" are indicators for the week of the year; the variables beginning with `yy` indicates the year. This means `yy1` stands for 2002 and `yy11` for 2012. The variables starting with `h` are holiday indicators. All these variables are either 0 or 1, 0 if it is false for one observation, and one if true. The last two variables should be already familiar. `dow` stands for day of the week and can be 5, 6, or 0, which indicates Friday, Saturday, or Sunday. `wk1` is an indicator variable if the movie is one week in theaters. We will need this later.
+
+
+#< info "Holiday variables"
+
+In the paper are the same holiday indicators used as in Dahl and DellaVigna (2009). A short description of the holidays and naming can be found in the [Appendix A](https://www.journals.uchicago.edu/doi/full/10.1086/688177#_i42) of the paper. 
+
+#>
+
+Now let us plot ticket sales against date, just press check:
+
+```{r "4__3"}
+#< task_notest
+library(lubridate)
+data <- data %>%
+  mutate(date = as_date(date, origin = "1960-01-01"))
+
+library(ggplot2)
+ggplot(data = data, aes(date, tickets)) +
+  geom_point(size = 0.5, colour = "red")  +
+  xlab("year")
+#>
+```
+The plot shows data points for each movie on each day of the weekend. The majority of movies are between 0 - 1.5 million sold tickets per day. However, there are a lot of movies, with more than 1.5 million sold tickets. This plot does not show, if those higher ticket sales are due to seasonal effects or if they are unexpected high on that certain day compared to that day in other years. It seems like most of the higher data points are around the same time every year so that seasonality may have a high effect. As explained earlier, for example, around Christmas, ticket sales tend to be higher every year. To find abnormal viewership, we need to take into account that our sold tickets on each day, may depend on the day itself. Therefore we have to correct our tickets for influences, which occur by date. We use the date indicator variables that were explained earlier.
+
+
+
+### Empirical Method
+
+#### Abnormal Viewership
+
+In our empirical method, we need to factor out seasonality. Therefore we denote $v_{tj}$ as viewership on date $t$ and $j$ as a week in theaters. For now, we will look at opening weekends. Therefore we set $j=1$. Our viewership or sold tickets in opening weekends is then $v_{t1}$. Now we denote the indicators for the day of the week, each week, each year, and holidays as $F’ _t$. 
+
+We want to create a variable with the column names for $F’ _t$. Therefore, we select our indicator variables with `select()` and save the names of the variables with `colnames()` in a variable `f_t`. Just press check:
+
+```{r "4__4"}
+
+#< task_notest
+f_t <- data %>%
+  select(starts_with("ww"),
+         starts_with("yy"),
+         starts_with("h"),
+         starts_with("dow")) %>%
+  colnames()
+
+#>
+
+```
+
+To factor out seasonality, we first have to run a regression to determine how much ticket sales are influenced by it. Our regression formula is
+
+
+$$v_{t1}=\beta_0 + F'_t \beta_1 + \epsilon.$$
+
+
+Writing the regression formula by hand with all the weeks, years, and holidays would be tedious. Therefore we just let R write it for us and save it as a formula. The formula is saved under `reg_formula`. Just press check to run the chunk, at the end the formula will be printed:
+
+
+```{r "4__5"}
+
+#< task_notest
+reg_formular <-
+  as.formula(paste("tickets", paste(f_t, collapse = "+"), sep = " ~ "))
+
+print(reg_formular)
+#>
+
+```
+
+Now, run the regression with `lm()` and save it as `my_lm`:
+
+```{r "4__6"}
+#< task_notest
+my_lm <- lm(reg_formular, data = data)
+#>
+```
+
+For this task, we are not interested in the estimates of our regressions, but we are interested in the predicted also called fitted values in the `lm-object`. We add those values to our data with the variable name `fit`.
+```{r "4__7"}
+#< task_notest
+data$fit <- my_lm$fitted.values
+#>
+
+```
+
+
+Now we take the plot from above and add the predicted values:
+
+```{r "4__8"}
+
+#< task_notest
+ggplot(data = data)  +
+  geom_point(aes(x = date, y = tickets), size = 0.5, colour = "red")+
+  geom_point(aes(x = date, y = fit),size= 1, colour = "blue")+
+  scale_x_date(date_labels = "%Y")  +
+  xlab("year")
+
+#>
+
+```
+We now have predicted ticket sales for each date according to season and holiday (in blue). We denote the predicted values with $\widehat{v}_{t1}$. As we can see, we have a lot of actual data points that are much higher or lower than the predicted values. This means the difference between those points is not explained by seasonality. We call this difference **abnormal viewership** ${v\_abn}_{t1}$. (Remember, we are only looking at tickets in the first week in theaters!) Abnormal viewership is our residual values. That can be calculated by
+
+$${v\_abn}_{t1} = v_{t1} - \widehat{v}_{t1}.$$
+In an `lm-object` are residuals already saved. We are saving the residuals of `my_lm` to our data.  Just press check:
+```{r "4__9"}
+#< task_notest
+data$res <- my_lm$residuals
+#>
+```
+
+Our aim is it to get abnormal viewership’s by date, that means for each date we need the biggest difference between realized and predicted values. Therefore we group our data by `date` and save the largest residual for each date in a new variable called `abn_tickets_wk1`:
+
+```{r "4__10"}
+#< task_notest
+data <- data %>%
+  group_by(date) %>%
+  mutate(abn_tickets_wk1 = max(res)) %>%
+  ungroup()
+#>
+```
+
+Now plot our new variable `abn_tickets_wk1`:
+```{r "4__11"}
+#< task_notest
+ggplot(data = data) +
+  geom_point(aes(x = date, y = abn_tickets_wk1), size = 0.5) +
+  ylab("abnormal viewership") +
+  xlab("year")
+  
+#>
+
+```
+
+The plot shows abnormal viewership for each date. Next, you find some questions about the plot and abnormal viewership.
+<br>
+<br>
+
+#### Are the following statements true or false?
+
+#< quiz "Ex4-1"
+question: The y-axis (abnormal viewership) in the plot shows the difference between expected ticket sales and actual ticket sales.
+choices:
+- TRUE*
+- FALSE
+#>
+<br>
+<br>
+
+
+#< quiz "Ex4-2"
+question: The expected ticket sales are estimated by regression to factor out seasonal effects.
+choices:
+- TRUE*
+- FALSE
+
+#>
+<br>
+<br>
+
+
+#### Questions:
+
+#< quiz "Ex4-3"
+question: What does a data point in the plot with abnormal viewership equal to zero mean?
+choices:
+- Ticket sales are as expected for that day. *
+- Ticket sales are higher than expected for that day.
+- Ticket sales are lower as expected for that day.
+
+#>
+
+<br>
+<br>
+
+
+#< quiz "Ex4-4"
+question: What does a data point in the plot with abnormal viewership smaller than zero mean?
+choices:
+- Ticket sales are as expected for that day.
+- Ticket sales are higher than expected for that day.
+- Ticket sales are lower as expected for that day. *
+
+#>
+
+<br>
+<br>
+
+
+#< quiz "Ex4-5"
+question: What does a data point in the plot with abnormal viewership larger than zero mean?
+choices:
+- Ticket sales are as expected for that day.
+- Ticket sales are higher than expected for that day. *
+- Ticket sales are lower as expected for that day.
+#>
+
+
+<br>
+<br>
+
+#< award "Abnormal Viewership"
+ Good Job! Now, you are an expert on abnormal viewership!
+#>
+
+#### Weather Shocks
+
+Now we want to do the same for weather variables. Our weather data is from the US National Weather Service. It contains percentages of theaters experiencing certain weather on a national level. The weather measures include different temperatures, precipitation, and combined measures of precipitation and temperature, such as snow. Temperature measures are divided into 5° Fahrenheit dummies (2.8° Celsius). Precipitation measures are divided into 0.25-inch dummies (0,635 cm).
+
+
+As mentioned above, we create new weather variables called "weather shocks" for the weather, which occurs unexpectedly. $w_k$ is our variable for each of our weather measures. As done above, we have the following regression for each weather measure:
+
+$$w_{tk} = \delta_k + F’_t \beta_1 + \epsilon$$
+$t$ is the index for the date, and $k$ is an index for each weather measure. $ F’ _t$ is our indicator variable for the day of the week, each week of the year, year, and holidays. 
+
+We predict our weather measures and denote it with $\widehat{w_{tk}}$.
+
+Our weather shocks are now defined as 
+$$w\_shock_{tk} = w_{tk} - \widehat{w}_{tk}.$$
+
+#### Question:
+If you need a hint, you find an info box below the question.
+
+We look at one temperature range: temperature between  5° and 10° Fahrenheit. At one day, the weather shock variable has a value higher than zero for this range.
+
+#< quiz "Ex4-6"
+question: What does this mean?
+choices:
+-  More theaters than expected experienced a temperature between 5° and 10° Fahrenheit on this particular day.*
+- Fewer theaters than expected experienced a temperature between 5° and 10° Fahrenheit on this specific day. 
+- As expected, there are as many theaters that experienced a temperature between 5° and 10° Fahrenheit on this particular day.
+#>
+
+<br>
+<br>
+
+
+We pass on calculating all these variables in the problem set. They have already been created and will be introduced in the next exercise.
+
+
+Our tickets and weather variables are now only showing abnormal effects. Further, we will only use abnormal viewership/ticket sales and weather shocks. 
+
+After doing an analysis of our weather shock variables we will select the most influencal variables. We will perform a first stage analysis. (Exercise 7)
+$$ {v\_abn}_{t1} =  \eta + \sum_{i=1}^{n}\xi_i * w\_shock_{tki} + \epsilon $$
+With i being the number of selected weather shocks.
+
+Next, we will perform a second stage analysis to estimate the influence of abnormal viewership in the first week on abnormal viewership in the following weeks with $j>1$ for each subsequent week. (Exercise 8)
+
+
+$$ {v\_abn}_{tj} =  \mu_t + \theta_t * \widehat{{v\_abn}}_{t-7(j-1)} + \epsilon $$
+
+
+
+
+
+
+## Exercise 5 -- Moviegoing Summer
+
+In this exercise, we want to get familiar with some of the weather shock variables. We are going to analyze some typical summer variables - the temperature range between 60° and 95° Fahrenheit (about 15.6° till 35° Celsius). For this exercise, we need to read in the `data_summer.dta`. It only contains observations for the first week with abnormal viewership, as calculated in exercise 3 and seven "summer" temperature variables.
+
+
+```{r "5"}
+#< task_notest
+library(haven)
+data <- read_dta("data_summer.dta")
+#>
+```
+Let’s take a look at our data with head().
+
+```{r "5__2"}
+#< task_notest
+head(data)
+#>
+```
+The first column, `abn_tickets_wk1` is the abnormal ticket sales in the first week from exercise 3.  A number around zero for one day means that the ticket sales are as expected for that day, after factoring out seasonality.  A positive number means that ticket sales are unexpectedly high. A negative number of ticket sales means they are unexpected low on that day. <br>
+The other seven columns are our temperature data in 5° degree increments from 60° till 95° Fahrenheit. Each variable ends with a `0` for Sunday. Due to large moviegoing during day time. `temperature_shock_60_0` stands for the temperature increment between 60° and 65° Fahrenheit. If the number in this increment is high, more theaters than expected are in this temperature range on that day. Each temperature variable may influence abnormal ticket sales.  <br>
+
+To find out to which degree this is the case for, we are going to run regressions for each temperature as the independent variable and abnormal ticket sales as a dependent variable:
+
+$${tickets\_abn} = \alpha + \beta* {temperature\_increment} + \epsilon$$
+Just press check to run all seven regressions.
+
+```{r "5__3"}
+#< task_notest
+lm_1 <- lm(abn_tickets_wk1 ~ temperature_shock_60_0, data = data)
+lm_2 <- lm(abn_tickets_wk1 ~ temperature_shock_65_0, data = data)
+lm_3 <- lm(abn_tickets_wk1 ~ temperature_shock_70_0, data = data)
+lm_4 <- lm(abn_tickets_wk1 ~ temperature_shock_75_0, data = data)
+lm_5 <- lm(abn_tickets_wk1 ~ temperature_shock_80_0, data = data)
+lm_6 <- lm(abn_tickets_wk1 ~ temperature_shock_85_0, data = data)
+lm_7 <- lm(abn_tickets_wk1 ~ temperature_shock_90_0, data = data)
+#>
+
+```
+
+Instead of looking at each regression and comparing regression tables, we are using the library `dotwhisker` to get the results in a graph. The graph we are plotting is a so-called coefplot. It shows with a dot the estimate of the coefficients, and the whiskers are by the default the 95% confidence interval. Further information you find [here](https://cran.r-project.org/web/packages/dotwhisker/vignettes/dotwhisker-vignette.html). Just press check to create the plot:
+
+
+
+```{r "5__4"}
+#< task_notest
+library(dotwhisker)
+
+
+dwplot(
+  list(lm_1, lm_2, lm_3, lm_4, lm_5, lm_6, lm_7),
+  vline = geom_vline(
+    xintercept = 0 ,
+    colour = "grey30",
+    linetype = "dotted")) %>%
+  relabel_predictors(
+    c(temperature_shock_60_0 = "60-65",
+      temperature_shock_65_0 = "65-70",
+      temperature_shock_70_0 = "70-75",
+      temperature_shock_75_0 = "75-80",
+      temperature_shock_80_0 = "80-85",
+      temperature_shock_85_0 = "85-90",
+      temperature_shock_90_0 = "90-95")) +
+  ylab("Residual Temperature Range( Degrees F, levels)") +
+  xlab("Residual Opening Daily Ticket Sales (1,000,000)") +
+  theme(legend.position = "none") 
+#>
+
+```
+
+In this plot, we can see how unexpected temperatures in 5° intervals from 60° till 95° Fahrenheit influence ticket sales. Sudden high and low temperatures influence ticket sales positively. Unexpected temperatures between 70° till 85° Fahrenheit (21.1° - 29,4° Celsius) effect ticket sales negatively. In absolute values, the most prominent influence has the range 75° till 80° Fahrenheit (23.9° - 26.7° Celsius). 
+
+
+<!-- To better understand what kind of values the variable contains, display the values for the range 75° till 80° in a histogram: -->
+<!-- ```{r "5__5"} -->
+<!-- #< task_notest -->
+<!-- ggplot(data, aes(x=temperature_shock_75_0, y = ..density..)) +  -->
+<!--     geom_histogram( bins = 41, fill= "grey", color = "black", boundary = 0) + -->
+<!--     xlab("Residual % Theaters at 75-80 degrees In Opening Weekend") + -->
+<!--     ylab("Density") -->
+<!-- #> -->
+<!-- ``` -->
+<!-- The histogramm has on the x-axis the percentage of theaters which are unexpected in the  75° to 80° range and on the y-axis the belonging density.  -->
+
+
+
+<!-- For the next plot, we don’t want all our data points in the plot. Therefore we make 100 percentiles. Just press check: -->
+
+<!-- ```{r "5__6"} -->
+<!-- #< task_notest -->
+
+
+<!-- data <- data %>%  -->
+<!--   mutate(res_75_80_100 = temperature_shock_75_0 *100) %>% -->
+<!--    mutate( quantile_rank = ntile(res_75_80_100, 100)) %>% -->
+<!--   group_by(quantile_rank)  %>% -->
+<!--   summarise(res_75_80_100 = mean(res_75_80_100), y = mean(abn_tickets_wk1)) -->
+<!-- #> -->
+
+<!-- ``` -->
+
+<!-- Let’s plot our percentile and our regression results: -->
+
+
+We want to take a closer look at this range by plotting all data points in one plot. We also add a regression line:
+```{r "5__5"}
+#< task_notest
+library(ggplot2)
+ggplot(data = data, aes(x=temperature_shock_75_0, y = abn_tickets_wk1)) +
+  geom_point(size = 0.25) + 
+  geom_smooth(method='lm', se = FALSE) +
+    xlab("Residual % Theaters at 75-80 degrees") +
+    ylab("Residual Ticket Sales (1,000,000s)")
+
+summary(lm_4)
+#>
+```
+The plot has on the x-axis the percentage of theaters, which are unexpected in the  75° to 80° range. On the y-axis is abnormal viewership. The blue line is our regression. Below the plot, you have a regression output with further details.
+
+
+#### Question:
+If you need a hint, you find an info box below the question.
+
+#< quiz "Ex5-1"
+question: If there are 10% more theaters unexpectedly in the plotted range between 75°-80° Fahrenheit, the abnormal viewership of our model…
+choices:
+-    …increases  by 0.3 million.
+-    …increases  by 3 million.
+-    …decreases by 0.3 million.*
+-    …decreases by 3 million.
+-    …stays the same.
+
+#>
+<br>
+<br>
+
+#< info "Hint"
+To find out if the viewership increases or decreases with more theaters unexpectedly in the observed temperature range, you can look at the blue regression line in the plot. Does the line increase or decrease with higher x-axis values? <br>
+To find the exact slope of the regression line, look at the regression output below the plot. 
+#>
+
+<br>
+<br>
+
+
+#< award "Summer Temperature"
+ Well done!
+#>
+
+
+
+## Exercise 6 -- Variable Selection Method
+
+Weather shocks influence abnormal viewership, as we have seen. But there is a catch: Including all our weather measures into our model is tempting, but we have too many different variables for the entire US. It might cause us to overfit by keeping all variables or underfit by selecting too few or nonrelevant variables. Therefore we want to find the most important variable which predicts abnormal viewership in the first week:
+
+<!-- $${v\_abn}_{t1} = \beta_0 + \beta_1* w\_lasso_{t1}$$ -->
+
+<!-- First one variable and later two variables. -->
+
+
+
+### LASSO - Least Absolute Shrinkage and Selection Operator
+
+**LASSO** stands for **Least Absolute Shrinkage and Selection Operator**. It is a regression method used in statistics and machine learning. It can help to improve the prediction and interpretability of the produced model. That is done by variable selection and regularization. LASSO uses regularization to penalize features. It can automatically set coefficients of features to zero. So if the feature is not relevant, it does not influence our model. Therefore we have an algorithm for variable selection. LASSO is very similar to OLS with some modifications to the error function (cf. Dangeti (2017), pp. 75-77):
+
+
+
+
+#### Error function - OLS:
+
+Remember in exercise 3 we took a look at *least squares*. In order to get a good regression line we minimize the following :
+
+
+$$\sum_{i=1}^{n}(y_i - \beta_0 - \beta_1x_{i1} - ... - \beta_p x_{ip})^2 \rightarrow min_{\beta_0, \beta_1,...,\beta_p}$$
+
+#### Error function - LASSO:
+
+**LASSO** in the case of least squares uses the same function, but adds a penalty term (cf. Dangeti (2017), pp. 75-77): 
+
+$$\sum_{i=1}^{n}(y_i - \beta_0 - \beta_1x_{i1} - ... - \beta_p x_{ip})^2+ \lambda \sum_{i=1}^{n} |\beta_i| \rightarrow min_{\beta_0, \beta_1,...,\beta_p}$$
+
+
+
+
+$\lambda$ is a so-called tuning parameter (cf. Dangeti (2017), pp. 75-77). As you can see, setting $\lambda$ to $0$ produces the same error function as for ordinary least squares. <br>
+Increasing the tuning parameter $\lambda$ results in more impact of the penalty term. With more influence of the penalty term, the number of variables for our model gets reduced because insignificant parameters are set to zero by minimizing the absolute values of the parameters.
+
+Start with loading `data_lasso.dta`. It only includes the variables we need for our LASSO. Press check:
+```{r "6"}
+
+#< task_notest
+library(haven)
+data <- read_dta("data_lasso.dta")
+#>
+
+```
+
+Let us take a look at the variable names in our data set with `colnames()`:
+```{r "6__2"}
+#< task
+# Take a look at the variable names in our data set with `colnames()`
+#>
+colnames(data)
+```
+The data contains a variable with the name `abn_tickets_wk1`, which contains abnormal viewership for week 1. The other variables are weather shock variables, containing percentages of theaters unexpectedly experiencing certain weather. The `temperature_shock` variables are divided into 5° Fahrenheit dummies (2.8° Celsius). We have two variables for rain and snow shocks each, called `rain_shock` and `snow_shock`. The remaining variables are variables for unexpected precipitation divided into 0.25-inch dummies (0,635 cm). Each variable ends with a `6` for Saturday or `0` for Sunday.
+
+
+All variables were calculated in exercise 4.
+
+<!-- For our LASSO, we need in R the package `glmnet`. -->
+
+<!-- glmnet: h -->
+<!-- http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/153-penalized-regression-essentials-ridge-lasso-elastic-net/#lasso-regression -->
+
+
+
+
+Now we load the package `glmnet`, which already has a function for LASSO:
+
+```{r "6__3"}
+#< task
+#Load the package glmnet
+
+#>
+library(glmnet)
+```
+<br>
+
+#< info "glmnet and LASSO"
+
+`glmnet` includes not only a LASSO regression but also RIDGE and a mixture of both (elastic net). If you are interested in further information about this package, go [here](http://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html#lin
+). You can find further details on the exact formula used for LASSO.
+
+#>
+
+First, we need to create a model. Therefore we create a x-variable with `model.matrix()` containing a formula. Our response variable gets saved in another variable $y$. Just press check:
+
+
+```{r "6__4"}
+
+#< task_notest
+
+# predictors
+x <- model.matrix(abn_tickets_wk1 ~., data)[,-1]
+
+# outcome
+y <- data$abn_tickets_wk1
+#>
+```
+
+In the next step, we are going to create our model with the function `glmnet`. The first argument of `glmnet()` is the created model matrix `x`; the second argument is our vector `y`. 
+`glmnet` supports different regression analysis methods. With `alpha = 1` as our third argument, LASSO is used. 
+To get results with more and more variables set to zero, LASSO is calculated with a vector of different values of $\lambda’ s$. Higher values of lambda set more variables to zero. By default, the number of distinct values of $\lambda$ (`nlambda`) is set to 100. In our case, this is not sufficient. Therefore we specify the forth argument as `nlambda = 300`.
+
+```{r "6__5"}
+#< task_notest
+model <- glmnet(x, y, alpha = 1, nlambda = 300)
+#>
+
+```
+Now we have created a `glmnet`-object. We can plot the coefficients of the model with `plot()`:
+
+```{r "6__6"}
+#< task_notest
+plot(model, xvar = "lambda")
+
+#>
+
+```
+ The lower x-axis shows the logarithm of our lambda values. It increases from left to right. The y-axis shows the coefficient values. Each line in the plot stands for one coefficient of a weather shock variable. So the plot shows the development of the coefficients for each variable when $\lambda$  is increased. <br>
+The upper x-axis shows the number of variables that have coefficient values higher than zero.  This number is called the degree of freedom (= df).
+
+
+When $\lambda = 0$, we have the ordinary least square regression from chapter 3,  because the penalty term has no impact. That means no weather shock variable is excluded, so all variables are used in the regression. The number of degrees of freedom is the number of different weather shock variables. <br>
+When lambda is increased, more and more coefficient values of not so important weather shock variables are set to zero, and the degree of freedom is reduced. That can be seen in the plot, with one line after another going to zero. 
+<br>
+
+#### Questions:
+
+#< quiz "Ex6-1"
+question: What happens with the upper x-axis value in the plot (degree of freedom) when one coefficient of a weather shock variable is set to zero?
+choices:
+- The x-Axis value (degree of freedom) is increased by one.
+- The x-Axis value (degree of freedom) is decreased by one.*
+- The x-Axis value (degree of freedom) does not change. 
+#>
+
+<br>
+<br>
+#< quiz "Ex6-2"
+question: How high must lambda be, that there are only two coefficients of weather shock variables not equaling zero so that we have only two degrees of freedom?
+choices:
+- around e^(-4)
+- around e^(-3)
+- around e^(-2)*
+#>
+<br>
+<br>
+#< quiz "Ex6-3"
+question: Which is the most important weather shock variable?
+choices:
+- It is the weather shock belonging to the last line in the plot that goes to zero when increasing lambda.  (The variable with the coefficient, which is set to zero last.) *
+- It is the weather shock belonging to the first line in the plot that goes to zero when increasing lambda.  (The variable with the coefficient, which is set to zero first.)
+#>
+
+<br>
+<br>
+ 
+
+
+Our next aim is to select the essential weather shock variables. Therefore we take a look at the five highest lambda values with corresponding degrees of freedom. The lambdas and corresponding degrees of freedom are saved in a table called `output`. Just press check to save the table and print the first five lines:
+
+```{r "6__7"}
+
+#< task_notest
+output <- data.frame("df" =model$df, "lambda" = model$lambda)
+head(output, 5)
+
+#>
+```
+In the column `lambda`,  you now see the ten highest $\lambda’s$ and the corresponding degrees of freedom in the column `df`. 
+
+### Selecting the most important weather shock variable
+
+
+To get the most important variable, we have to select a lambda with the corresponding degree of freedom, which equals one. In our case, this is the second lambda in our table `output`. 
+
+
+The function `coef()` displays all coefficients of our model. Specifying our lambda allows us to get a coefficient output for all-weather shocks for this lambda. Therefore, we set $\lambda$ with `s=output$lambda[2]`. Just press check to get the coefficients of all-weather shocks for the second-highest lambda:
+```{r "6__8"}
+
+#< task_notest
+coef(model, s=output$lambda[2])
+#>
+```
+Each weather shock with a `.` next to it was set to zero and therefore eliminated from our model. As expected, we have one variable with a coefficient next to it. This variable is called  `temperature_shock_50_6`. That is the temperature range between 50° and 55° on a Saturday. In the next exercise, we will take a closer look at the influence of this variable on abnormal viewership.
+
+#< award "First LASSO-variable"
+ Great! YOu selected the first variable!
+#>
+
+### Selecting the second most important weather shock variable
+
+Now we want our algorithm to select the second most crucial weather shock variable. 
+
+```{r "6__9"}
+
+#< fill_in
+# Fill in the correct column to get the first and second most important weather shock variable
+coef(model, s=output$lambda[___])
+#>
+
+coef(model, s=output$lambda[3])
+
+```
+#< quiz "Ex6-4"
+question: Which is the second most important weather shock variable?
+choices:
+- temperature_shock_90_0
+- temperature_shock_50_6
+- temperature_shock_70_0
+- temperature_shock_75_0*
+
+#>
+
+<br>
+<br>
+
+
+
+<!-- ### Select three variables -->
+
+<!-- Second LASSO-Chosen is: temperature_shock_50_6, temperature_shock_75_0 -->
+
+<!-- ```{r "6__10"} -->
+<!-- #< task_notest -->
+
+<!-- coef(model, s=model$lambda[8]) -->
+
+<!-- #> -->
+<!-- ``` -->
+<!-- Third LASSO-Chosen: temperature_shock_75_0, temperature_shock_50_6, dafür temperature_shock_55_0 -->
+
+### LASSO Results paper
+
+Our results differ from the results in the paper. The first and second variables were selected in reverse order.  We used the standard LASSO-algorithm given by the `glmnet` package, but the paper used a different LASSO-Algorithm. It is modified to predict better instrumental variables of a model with linear instrumental variables. In exercise 8, we will get to know instrumental variables. 
+
+With both algorithms, we have similar results. By selecting two variables, we even get the same instruments.
+
+
+
+
+
+
+
+
+
+
+
+
+## Exercise 7 -- First Stage Results
+
+In this exercise, we analyze the impact of our LASSO selected weather variables from exercise 6 on abnormal viewership and compare our different variables. We are analyzing our LASSO selected variables and the selected variables of the paper. 
+
+#### LASSO Results
+
+In Exercise 6, LASSO selected `temperature_shock_50_6` first and `temperature_shock_75_0` as second variable. The order of the selected variables was reversed in the paper, due to a slightly different algorithm. 
+
+As always, we first need to load our data set. This time we need to load `data_first_stage.dta`. It has already been altered for this exercise. Just press check:
+
+
+```{r "7"}
+
+#< task_notest 
+library(haven)
+data <- read_dta("data_first_stage.dta")
+#>
+
+```
+
+Take a look at the data set with `head()`:
+
+```{r "7__2"}
+#< task
+
+#>
+head(data)
+
+```
+Our data contains only our abnormal tickets for week one and the two selected temperature shock variables and our date variable in numeric format.
+
+
+For the rest of the problem set, we need a new function to run our regression. It is called `felm()` from the package `lfe`. `felm()` is an extension for `lm()`. For this exercise, we need to be able to calculate clustered standard errors. In the next exercise, we need another attribute of this function.
+
+<!-- ToDo robust standard errors! & felm -->
+
+### First Stage Results: One Variable
+
+#### Our Results
+
+In exercise 6, our first variable selected by our Lasso regression was the temperature range between 50° and 55° Fahrenheit. `felm()` has several applications. Two of them we don’t need right now. Our standard errors are supposed to be clustered by date. Therefore we have to insert after our regression `|0|0| date`. Just press check to look at the results:
+
+```{r "7__3"}
+
+#< task_notest
+library(lfe)
+reg_o1 <- felm(abn_tickets_wk1 ~ temperature_shock_50_6 |0|0| date, data = data)
+
+summary(reg_o1)
+
+#>
+
+```
+These are our results for our first selected variable with LASSO. We get the following model:
+$$ abnormal \_ viewership = 0 + 3.905* temp_{50-55}$$
+
+
+As you can see, the `felm()` output is very similar to `lm()`. For $R^2$ and the f-statistic, we have each an added column for the projected model.
+
+<br>
+
+
+#< quiz "Ex7-1"
+question: If 10% more theaters are in the temperature range between 50° and 55° Fahrenheit, how does it influence daily viewership opening weekends? (Remember our abnormal viewership is in 1 million tickets and our weather shocks contain the percentage of theaters experiencing unexpected this wheater shock.)
+choices:
+  - about 400 000 less sold tickets
+  - about 400 more sold ticket
+  - about 400 less sold tickets
+  - about 400 000 more sold ticket*
+
+#>
+
+<br>
+
+In the paper, a different LASSO algorithm was used and therefore had different results. Let us look at the model of the paper. First, run the regression for the single variable in the paper. 
+
+#### Paper
+```{r "7__4"}
+
+#< task_notest
+
+reg_p1 <- felm(abn_tickets_wk1 ~ temperature_shock_75_0|0|0| date, data = data)
+
+#>
+
+```
+
+Now we need to compare our two models:
+
+#### Comparison
+
+We want to write both regression results in one table. Therefore we need the function `stargazer()` from the `stargazer` package. Just press check to get the results:
+
+```{r "7__5",results='asis'}
+#< task_notest
+
+library(stargazer)
+stargazer(reg_o1,reg_p1,
+          omit = c("Constant"),
+          type = "html",
+          column.labels = c( "Our Results", "Results Paper"),
+          omit.stat = c("all"))
+
+#>
+
+```
+Our LASSO picked a variable with a positive effect and the LASSO algorithm of the paper, one with negative effects.  Both variables have a p-value below 0.01 (***), which indicates that their relationship to abnormal viewership is highly significant. In parenthesis, the standard error clustered on the date level is lower than in the paper’s model.
+
+
+Now we want to calculate the f-statistic and add it to our table. Therefore we need to extract the f-statistic from our summary statistic. Just press check again to get the results.
+
+```{r "7__6",results='asis'}
+#< task_notest
+fstat_1<- c(summary(reg_o1)$P.fstat[5], summary(reg_p1)$P.fstat[5]) %>%
+  round(digits = 3)
+
+stargazer(reg_o1,  reg_p1,
+          omit = c("Constant"),
+          type = "html",
+          column.labels = c( "Our Results", "Results Paper"),
+          add.lines = list(c("f-statistic", fstat_1 )),
+          omit.stat = c("all"))
+#>
+
+```
+
+So what is the critical value for our f-statistic? That can be done with the function `qf()`. In the first argument, we give the desired percentile. In this case, we want the 99% - percentile. Next, we specify our degrees of freedom `df1` and `df2`, which are `1` and `1669`. Give it a try:
+
+
+```{r "7__7"}
+qf(.99, df1=1, df2=1669) 
+
+
+```
+
+
+
+#< quiz "Ex7-2"
+question: The f-statistic indicates in comparison to the critical value that...
+choices:
+  - ... we can accept the hypothesis that the variables do not influence the regressions.
+  - ... we can reject the hypothesis that the variables do not influence the regressions.*
+
+#>
+<br>
+<br>
+
+### First Stage Results: Two Variables
+
+In exercise 6, we selected not only one variable with LASSO but two, which are conveniently the same in the paper and exercise 6.
+
+```{r "7__8",results='asis'}
+
+#< task_notest
+
+reg_2 <- felm(abn_tickets_wk1 ~ temperature_shock_50_6 + temperature_shock_75_0 |0|0| date, data = data)
+fstat_2 <- c(summary(reg_2)$P.fstat[5]) %>%
+  round(digits = 3)
+
+stargazer(reg_2,
+          omit = c("Constant"),
+          type = "html",
+          add.lines = list(c("f-statistic", fstat_2 )),
+          omit.stat = c("all"))
+#>
+
+```
+
+Again both variables have a p-value below 0.01 (***), which indicates that their relationship to abnormal viewership is highly significant. In parenthesis, you find once more the clustered standard error on the date level.
+
+What is the critical value for the f-statistic, when we have two variables?
+
+```{r "7__9"}
+qf(.99, df1=2, df2=1669) 
+
+
+```
+#< quiz "Ex7-3"
+question: Can we reject the hypothesis that the variables do not influence the regression?
+choices:
+  - yes!*
+  - no!
+
+#>
+ <br>
+ <br>
+
+
+
+
+<!-- ### First Stage Results: Three Variables -->
+
+<!-- #### Our Results -->
+
+<!-- ```{r "7__8"} -->
+
+<!-- #< task_notest -->
+
+<!-- reg_o3 <- felm(abn_tickets_wk1 ~ temperature_shock_50_6 + temperature_shock_75_0 + temperature_shock_55_0 |0|0| date, data = data) -->
+
+
+<!-- #> -->
+
+<!-- ``` -->
+
+
+<!-- #### Paper -->
+
+
+<!-- ```{r "7__9"} -->
+
+<!-- #< task_notest -->
+
+<!-- reg_p3 <- felm(abn_tickets_wk1 ~ temperature_shock_50_6 + temperature_shock_75_0 + temperature_shock_10_0|0|0| date, data = data) -->
+
+<!-- #> -->
+<!-- ``` -->
+<!-- #### Comparison -->
+
+<!-- ```{r "7__10"} -->
+<!-- #< task_notest -->
+<!-- fstat_3 <- c(summary(reg_o3)$P.fstat[5], summary(reg_p3)$P.fstat[5]) %>% -->
+<!--   round(digits = 3) -->
+
+<!-- stargazer(reg_o3,  reg_p3, -->
+<!--           omit = c("Constant"), -->
+<!--           type = "text", -->
+<!--           column.labels = c( "Our Results", "Results Paper"), -->
+<!--           add.lines = list(c("f-statistic", fstat_3 )), -->
+<!--           omit.stat = c("all")) -->
+
+<!-- #> -->
+<!-- ``` -->
+
+
+
+### All Results
+
+Let us add all the results in one table to get a better overview:
+
+```{r "7__10",results='asis'}
+
+
+fstat <- c(summary(reg_p1)$P.fstat[5], summary(reg_2)$P.fstat[5], 
+           summary(reg_o1)$P.fstat[5],summary(reg_2)$P.fstat[5]) %>%
+  round(digits = 3)
+
+
+stargazer(reg_p1, reg_2, reg_o1, reg_2, omit = c("Constant"), type = "html",
+          add.lines = list(c("f-statistic", fstat )),
+          column.labels =  c("Paper", "Own Results"),
+          column.separate = c(2, 2),
+          omit.stat = c("all"))
+
+```
+
+All our models can reject the f-statistic and have a significant relationship between the analyzed weather shock and abnormal viewership in week one. Therefore, we can continue our second stage analysis in the next exercise.
+
+
+#< award "Finished First Stage"
+ Congrats on finishing the first stage!
+#>
+
+
+
+
+## Exercise 8 -- Second Stage Results
+
+One of the key interests in the paper was how moviegoing behavior is influenced. So far, we have only looked at the data to determine how moviegoing behavior is influenced in the first week after release. Now we want to take a look at how the following weeks are influenced by the first week of moviegoing behavior. First, we need to load our data set. Just press check:
+
+
+```{r "8"}
+#< task_notest 
+library(haven)
+data <- read_dta("data_second_stage.dta") 
+#>
+
+```
+Take a look with `head()` at our data. Just press check:
+
+```{r "8__2"}
+#< task_notest 
+head(data) 
+#>
+
+```
+
+Additional to our variable for abnormal viewership in the first week (`abn_tickets_wk1`), we have variables for all following weeks. `abn_tickets_wk2_to_6` contains the accumulated abnormal viewership of week two till six. We have the two temperature shocks from the last two exercises, our usual date variable, and indicator variables for the week in theaters.
+
+
+In this case, our ticket sales for the opening weekend are not our independent variable but our dependent variable. We run a regression in the form of: 
+$$ abnormal \_ viewership _{i} = \beta_0 + \beta_1* abnormal \_ viewership _{1} + \epsilon $$
+$i$ indicates week two till six and overall ticket sales for all weeks. 
+Now we rerun a regular regression with `felm()`. Again we cluster at the date level and filter the data for each week with `subset =`. Press check to view a table of all regression results:
+
+```{r "8__3",results='asis'}
+
+#< task_notest
+library(lfe)
+
+ols_p_2 <- felm(abn_tickets_wk2 ~ abn_tickets_wk1 |0|0| date ,
+     data = data, subset = wk2 ==1)
+
+ols_p_3 <- felm(abn_tickets_wk3 ~ abn_tickets_wk1 |0|0| date ,
+     data = data, subset = wk3 ==1)
+
+ols_p_4 <- felm(abn_tickets_wk4 ~ abn_tickets_wk1 |0|0| date ,
+     data = data, subset = wk4 ==1)
+
+ols_p_5 <- felm(abn_tickets_wk5 ~ abn_tickets_wk1 |0|0| date ,
+     data = data, subset = wk5 ==1)
+
+ols_p_6 <- felm(abn_tickets_wk6 ~ abn_tickets_wk1 |0|0| date ,
+     data = data, subset = wk6 ==1)
+
+ols_p_7 <- felm(abn_tickets_wk2_to_6 ~ abn_tickets_wk1 |0|0| date ,
+     data = data, subset = wk1 ==1)
+
+
+stargazer(ols_p_2, ols_p_3 ,ols_p_4, ols_p_5, ols_p_6 ,ols_p_7, type = "html", 
+          omit = c("Constant"),
+          omit.stat = c("all"))
+
+#>
+```
+
+For each regression, we have a column. The last column is the accumulated abnormal viewership of weeks two to six.
+
+In our table, we find each dependent variable’s value of the coefficient of ticket sales, its clustered standard errors in parentheses below, and the p-value. As we can see, all relationships are highly significant below the 1% level. As always our ticket sales are in millions.
+
+#### Questions:
+
+#< quiz "Ex8 - 1"
+question: So the increase of 100 sold tickets in the first week corresponds to...
+choices:
+  - ... about 40 more sold tickets overall.
+  - ... about 40 more sold tickets in the second week.*
+  - ... about 6.3 more sold tickets overall.
+  - ... about 6.3 more sold tickets in the second week.
+
+#>
+
+<br>
+<br>
+
+#< quiz "Ex8 - 2"
+question: How big of an effect is realized in each week? 
+choices:
+  - Overall weeks roughly the same portion is realized each week.
+  - In each week, the amount increases until it is the highest in the last week.
+  - In the second week, almost half of the overall effect is realized. In the third week, one fourth and decreasing further in the following weeks. *
+#>
+
+<br>
+<br>
+
+
+As we have seen in our previous exercises, other variables influence our ticket sales opening weekend. Right now, these variables are included in our error term and therefore correlate with our explanatory variable. We assume no correlation between the explanatory variable and the error term for our regression with ordinary least squares. This problem is called endogeneity(cf. Kennedy, 2008, chapter 9, p. 139). 
+
+To solve for endogeneity, we have to use instrumental variables. An instrumental variable should be uncorrelated with the error term and correlated with the explanatory variable for which it is used as an instrument (cf. Kennedy, 2008, chapter 9, pp. 139 - 144). As we have seen in exercise 7, our LASSO selected variables are connected with our abnormal viewership in the first week. So these will be used as instruments. The instruments should be able to explain some variation of our abnormal viewership and help reduce the correlation between the explanatory variable and error term. 
+
+$$ {v\_abn}_{t1} =  \mu_t + \theta_t * \widehat{{v\_abn}}_{t-7(j-1)} + \epsilon $$
+$\widehat{{v\_abn}}_{t-7(j-1)}$ is our predicted abnormal viewership by our weather shock, as done in the first stage. $t$ is the date and for each week with $j>1$.
+
+
+
+Instrumental Variables (IV) can be implementer with `felm()`. The formula has now the form: `y ~ x | 0 | IV | cluster `. Our first instrument is the variable `temperature_shock_50_6`, which we obtained in exercise 6. Therefore we regress `abn_tickets_wk1 ~ temperature_shock_50_6`. With clustering at our date level and having only one explanatory variable the formula is: `y ~ 1 | 0 |(abn_tickets_wk1 ~ temperature_shock_50_6)| date`. For `y`, we need for each week a different variable with abnormal viewership.  
+
+Everything has been filled in in advance. In the end, a table will be computed. Just press check:
+
+```{r "8__4",results='asis'}
+
+#< task_notest
+
+iv_l_2 <- felm(abn_tickets_wk2 ~ 1|0|(abn_tickets_wk1 ~ temperature_shock_50_6)| date ,
+     data = data, subset = wk2 ==1)
+iv_l_3 <- felm(abn_tickets_wk3 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_50_6)| date ,
+     data = data, subset = wk3 ==1)
+iv_l_4 <- felm(abn_tickets_wk4 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_50_6)| date ,
+     data = data, subset = wk4 ==1)
+iv_l_5 <- felm(abn_tickets_wk5 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_50_6)| date ,
+     data = data, subset = wk5 ==1)
+iv_l_6 <- felm(abn_tickets_wk6 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_50_6)| date ,
+     data = data, subset = wk6 ==1)
+iv_l_n <- felm(abn_tickets_wk2_to_6 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_50_6)| date ,
+     data = data, subset = wk1 ==1)
+
+
+stargazer(iv_l_2, iv_l_3, iv_l_4, iv_l_5, iv_l_6, iv_l_n,
+          type = "html", 
+          omit = c("Constant"),
+          omit.stat = c("all"))
+
+#>
+
+```
+
+In the table, you see the results of our instrumental variable estimation with the temperature range from 50° to 55° Fahrenheit as an instrument. Our LASSO-algorithm estimated this instrument in exercise 6. 
+
+#### Question:
+
+#< quiz "Ex8 - 4"
+question: One hundred more viewers on the weekend of the first week add up to...
+choices:
+  - ... about 126 more viewers in the last week.
+  - ... about 126 more viewers in the first week.
+  - ... about 126 more viewers in following weeks.*
+  - ... about 126 more viewers in the second week.
+
+#>
+
+<br>
+<br>
+
+
+Now we want to do the same for our variable, which was selected in the paper:
+
+
+```{r "8__5"}
+#< task_notest
+iv_lp_2 <- felm(abn_tickets_wk2 ~ 1|0|(abn_tickets_wk1 ~ temperature_shock_75_0)| date ,
+     data = data, subset = wk2 ==1)
+iv_lp_3 <- felm(abn_tickets_wk3 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_75_0)| date ,
+     data = data, subset = wk3 ==1)
+iv_lp_4 <- felm(abn_tickets_wk4 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_75_0)| date ,
+     data = data, subset = wk4 ==1)
+iv_lp_5 <- felm(abn_tickets_wk5 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_75_0)| date ,
+     data = data, subset = wk5 ==1)
+iv_lp_6 <- felm(abn_tickets_wk6 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_75_0)| date ,
+     data = data, subset = wk6 ==1)
+iv_lp_n <- felm(abn_tickets_wk2_to_6 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_75_0)| date ,
+     data = data, subset = wk1 ==1)
+
+stargazer(iv_lp_2, iv_lp_3, iv_lp_4, iv_lp_5, iv_lp_6, iv_lp_n, type = "html", 
+          omit = c("Constant"),
+          omit.stat = c("all"))
+
+#>
+
+
+```
+
+#### Question:
+
+#< quiz "Ex8 - 5"
+question: One hundred more viewers on the weekend of the first week add up to...
+choices:
+  - ... about 114 more viewers in the following weeks.*
+  - ... about 120 more viewers in the following weeks.
+  - ... about 95 more viewers in the following weeks.
+  - ... about 126 more viewers in the following weeks.
+#>
+<br>
+<br>
+
+In our last case, we use those two variables, which our LASSO chose and was also chosen in the paper.
+
+
+```{r "8__6",results='asis'}
+
+#< task_notest
+iv_l2_2 <- felm(abn_tickets_wk2 ~ 1|0|(abn_tickets_wk1 ~ temperature_shock_75_0 + temperature_shock_50_6)| date ,
+     data = data, subset = wk2 ==1)
+iv_l2_3 <- felm(abn_tickets_wk3 ~ 1|0|(abn_tickets_wk1 ~ temperature_shock_75_0 + temperature_shock_50_6)| date ,
+     data = data, subset = wk3 ==1)
+iv_l2_4 <- felm(abn_tickets_wk4 ~ 1|0|(abn_tickets_wk1 ~ temperature_shock_75_0 + temperature_shock_50_6)| date ,
+     data = data, subset = wk4 ==1)
+iv_l2_5 <- felm(abn_tickets_wk5 ~ 1|0|(abn_tickets_wk1 ~ temperature_shock_75_0 + temperature_shock_50_6)| date ,
+     data = data, subset = wk5 ==1)
+iv_l2_6 <- felm(abn_tickets_wk6 ~ 1|0|(abn_tickets_wk1 ~ temperature_shock_75_0 + temperature_shock_50_6)| date ,
+     data = data, subset = wk6 ==1)
+iv_l2_n <- felm(abn_tickets_wk2_to_6 ~ 1|0|(abn_tickets_wk1 ~temperature_shock_75_0 + temperature_shock_50_6)| date ,
+     data = data, subset = wk1 ==1)
+
+
+stargazer(iv_l2_2, iv_l2_3, iv_l2_4, iv_l2_5, iv_l2_6, iv_l2_n, type = "html", 
+          omit = c("Constant"),
+          omit.stat = c("all"))
+#>
+
+```
+
+#### Question:
+
+#< quiz "Ex8 - 6"
+question: One hundred more viewers on the weekend of the first week add up to...
+choices:
+  - ... about 114 more viewers in the following weeks.
+  - ... about 120 more viewers in the following weeks.*
+  - ... about 95 more viewers in the following weeks.
+  - ... about 126 more viewers in the following weeks.
+#>
+<br>
+<br>
+
+#< quiz "Ex8 - 7"
+question: Looking at the results of this exercise, which statement is true?
+choices:
+  - There is no relationship between abnormal viewership at the opening weekend and viewership in the following weeks.
+  - Increased abnormal viewership at the opening weekend of a movie decreases the viewership in the following weeks.
+  - Between abnormal viewership at the opening weekend of a movie and the following weeks is a strong link.*
+#>
+<br>
+<br>
+
+In total, our results are very similar for each instrument. 
+
+#< quiz "Ex8 - 8"
+question: How much of an effect is found in subsequent weeks (compared to the opening weekend)?
+choices:
+  - Viewership in subsequent weeks was in total a little bit larger than at the opening weekend. That means the viewership of opening weekend more than doubled in the following weeks.*
+  - Viewership in subsequent weeks was in total smaller than at the opening weekend. That means the viewership of opening weekend less than doubled in the following weeks.
+  - Viewership increased for each week and duplicated three times.
+#>
+<br>
+<br>
+
+#< award "Finished Second Stage"
+ Congratulation! This was the last exercise!
+#>
+
+
+### Learning vs. Network Externalities
+
+In the paper were similar results found on the local level. That could be due to a "learning effect". Therefore, the paper examines the effects of movie quality and prior knowledge, only to find the results unchanged. There might still be a learning effect, but the paper finds no further evidence for learning due to private information like movie quality. In the first week, our weather shocks impact viewership in the next weeks, a so-called social spillover effect. That might be since viewership knows that others have seen the movie and value the shared experience by knowing that others have seen the movie. That is called network externalities.
+
+
+## Exercise 9 -- Conclusion
+
+
+#< quiz "Ex9 - 1"
+question: Does the weather influence ticket sales?
+choices:
+  - Yes, we found a significant influence.*
+  - No, we did not find any significant influence.
+  
+#>
+<br>
+<br>
+
+#< quiz "Ex9 - 2"
+question: Do viewership shocks in the first week affect viewership in subsequent weeks (social spillover)?
+choices:
+  - No, we did not find any effect.
+  - Yes, we found a multiplicate effect. *
+  
+#>
+<br>
+<br>
+
+
+
+In this problem set, we analyzed the effect of weather shocks on moviegoing behavior. Since our weather data has a lot of instruments, we implemented a LASSO algorithm for variable selection. Using the basic LASSO algorithm provided by the package `glmnet`, we get slightly different results, as found in the paper. In the paper, a modified LASSO algorithm, adapted to select optimal instruments, was used. 
+
+With our and from the paper LASSO-selected instruments, we perform a first stage analysis for opening weekend viewership. We find that all instruments are reliable. Conducting the second stage analysis, we find similar results for all selected instruments: Viewership in subsequent weeks were in total a little bit larger than at the opening weekend. That means the efffect of abnormal viewership of opening weekends more than doubled in the following weeks.
+
+In this problem set, we only replicated the essential parts of the paper. Therefore you find additional robustness checks, local analysis, and proxies for qualities in the paper itself. 
+
+Overall our results stay the same. That indicates that the observed effect takes place on a local level. That moviegoing is driven by either some unknown learning effects or the value of shared experiences, so-called network externalities.
+
+
+Here you can see the collected awards, in total there are eigth awards:
+ 
+```{r "9"}
+#< task_notest
+
+awards()
+
+#>
+
+```
+
+
+
+
+
+
+## Exercise References -- References
+
+
+### Bibliography
+
+- Becker, G.S. (1991): *A Note on Restaurant Pricing and Other Examples of Social Influences on Price*. Journal of Political Economy 99, no. 5, p. 1109-1116. 
+
+- Dahl, Gordon and Stefano DellaVigna, (2009). *Does Movie Violence Increase Violent Crime?*. In: Quarterly Journal of Economics 124 (2), p. 677–734.
+
+- Dangeti, P. (2017) *Statistics for Machine Learning. Birmingham*, UK: Packt Publishing. p. 75-77.
+
+- Duncan Sheppard Gilchrist and Emily Glassberg Sands, *Something to Talk About: Social Spillovers in Movie Consumption*. Journal of Political Economy 124, no. 5 (October 2016). p. 1339-1382.
+
+- Einav, L. (2007). *Seasonality in the US Motion Picture Industry*. The RAND Journal of Economics, 38(1), p. 127-145.
+
+- Kennedy, P. (2008): *A Guide to Econometrics*. 6th Edition. Malden, MA [i.a.]: Blackwell Publishing.
+
+- Manski, C.F. (1993) *Identification of Endogenous Social Effects: The Reflection Problem*, The Review of Economic Studies, Volume 60, Issue 3, p. 531–542
+
+- O’Sullivan, Arthur; Sheffrin, Steven M. (2003): *Economics: Principles in Action*. Upper Saddle River, New Jersey: Pearson Prentice Hall, p. 79
+
+- Wooldridge, J.M. (2016): *Introductory Econometrics: A Modern Approach*. 6th Edition. Boston, MA [i.a.]: Cengage Learning.
+
+- Young, H Peyton. (2009): *Innovation Diffusion in Heterogeneous Populations: Contagion, Social Influence, and Social Learning.* American Economic Review, 99 (5), p. 1899-1924.
+
+### R Packages
+
+- Garrett Grolemund, Hadley Wickham (2011). Dates and Times Made Easy with lubridate. Journal of Statistical
+  Software, 40(3), 1-25. URL http://www.jstatsoft.org/v40/i03/.
+  
+- S. Gaure. lfe: Linear group fixed effects. R package version 2.8-5, 2019
+  
+- Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010). Regularization Paths for Generalized Linear Models via
+  Coordinate Descent. Journal of Statistical Software, 33(1), 1-22. URL http://www.jstatsoft.org/v33/i01/.
+
+- Hlavac, Marek (2018). stargazer: Well-Formatted Regression and Summary Statistics Tables.
+ R package version 5.2.2. https://CRAN.R-project.org/package=stargazer 
+ 
+- Frederick Solt and Yue Hu (2018). dotwhisker: Dot-and-Whisker Plots of Regression Results. R package version 0.5.0.  https://CRAN.R-project.org/package=dotwhisker
+ 
+- Elin Waring, Michael Quinn, Amelia McNamara, Eduardo Arino de la Rubia, Hao Zhu and Shannon Ellis (2020). skimr:  Compact and Flexible Summaries of Data. R package version 2.1.1. https://CRAN.R-project.org/package=sk
+ 
+- Hadley Wickham, Romain François, Lionel Henry and Kirill Müller (2020). dplyr: A Grammar of Data Manipulation. R package version 0.8.5. https://CRAN.R-project.org/package=dplyr
+
+- Hadley Wickham and Evan Miller (2019). haven: Import and Export 'SPSS', 'Stata' and 'SAS' Files. R package version 2.2.0. https://CRAN.R-project.org/package=haven
+
+- H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
+  
+  
