@@ -299,7 +299,6 @@ In the first section **Data Summary**, we find the name, number of rows, and num
 
 Now we take a look at the allocation of production budgets over time in our data. Therefore we need the package `ggplot2`. We want to create a plot with the production budget over time. On our x-axis, we use the variable `opening_sat_date` and on our y-axis `production_budget`. It contains for each movie the date of the Saturday, where it has been released. First, we load the package `ggplot2`, then insert the correct variables for the x- and y-axis, save it under the name `plot_pb` and print out the plot (this may take a while): 
 
-ToDo: task -> error?!
 
 ```{r "2__6"}
 
@@ -1773,7 +1772,7 @@ Our data contains only our abnormal tickets for week one and the two selected te
 
 For the rest of the problem set, we need a new function to run our regression. It is called `felm()` from the package `lfe`. `felm()` is an extension for `lm()`. For this exercise, we need to be able to calculate clustered standard errors. In the next exercise, we need another attribute of this function.
 
-<!-- ToDo robust standard errors! & felm -->
+
 
 ### First Stage Results: One Variable
 
