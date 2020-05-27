@@ -2353,6 +2353,9 @@ awards()
 - Hlavac, Marek (2018). stargazer: Well-Formatted Regression and Summary Statistics Tables.
  R package version 5.2.2. https://CRAN.R-project.org/package=stargazer 
  
+- Sebastian Kranz (2020). RTutor: Interactive R problem sets with automatic testing of solutions and
+  automatic hints. R package version 2020.4.05.
+  
 - Frederick Solt and Yue Hu (2018). dotwhisker: Dot-and-Whisker Plots of Regression Results. R package version 0.5.0.  https://CRAN.R-project.org/package=dotwhisker
  
 - Elin Waring, Michael Quinn, Amelia McNamara, Eduardo Arino de la Rubia, Hao Zhu and Shannon Ellis (2020). skimr:  Compact and Flexible Summaries of Data. R package version 2.1.1. https://CRAN.R-project.org/package=sk
