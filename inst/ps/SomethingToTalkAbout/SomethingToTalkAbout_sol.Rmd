@@ -2156,7 +2156,7 @@ choices:
 Now we want to do the same for our variable, which was selected in the paper:
 
 
-```{r "8__5"}
+```{r "8__5",results='asis'}
 #< task_notest
 iv_lp_2 <- felm(abn_tickets_wk2 ~ 1|0|(abn_tickets_wk1 ~ temperature_shock_75_0)| date ,
      data = data, subset = wk2 ==1)
