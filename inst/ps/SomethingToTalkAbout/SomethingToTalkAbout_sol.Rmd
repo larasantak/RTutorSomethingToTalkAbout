@@ -945,36 +945,6 @@ ggplot(data = data, aes( x= tickets, y = gross)) +
 Now you can see our regression line in our plot with $y_i = -15309 + 6957491 x_i$. 
 
 
-Now we want to investigate our regression output from above further. Just press check to get the same output again:
-
-```{r "3__8"}
-#< task
-summary(my_lm)
-#>
-
-```
-
-
-Another important information is in the coefficient part of our regression. Next to the estimate, you find a column called *Std. Error*. It is the average distance between the observed and predicted value. All predicted values are on the regression line. 
-
-#< quiz "Ex3-4"
-question:  What is the standard error in our linear regression? (The average difference between predicted gross and actual gross.)
-
-answer: 5286
-
-#>
-<br>
-<br>
-
-
-#< quiz "Ex3-5"
-question: To have a useful regression, do you think...
-choices: 
-- ... the standard error should be maximized.
-- ... the standard error should be minimized.*
-- ... the standard error is not essential for a regression.
-  
-#>
 <br>
 <br>
 
@@ -999,7 +969,7 @@ Rejecting $H_0$ means that at least one of the coefficients is, **not** zero.
 
 `lm()` also calculates the f-statistic. Retake a look at our regression output: (The f-statistic can be found in the last row)
 
-```{r "3__9"}
+```{r "3__8"}
 summary(my_lm)
 
 ```
@@ -1012,7 +982,7 @@ To calculate our critical value, we need the function `qf()`.In the first argume
 What is the critical value for our regression above with a confidence interval of 99%? Just press check.
 
 
-```{r "3__10"}
+```{r "3__9"}
 #< task
 qf(.99, 1, 28248)
 
